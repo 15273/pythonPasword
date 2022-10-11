@@ -4,8 +4,8 @@ import random
 import pyperclip
 import json
 
-# ---------------------------- PASSWORD GENERATOR ------------------------------- #
 
+# ---------------------------- PASSWORD GENERATOR ------------------------------- #
 def generate_password():
     letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
                'v',
@@ -44,14 +44,58 @@ def save():
             "password": password,
         }
     }
+
     if len(website) == 0 or len(email) == 0 or len(password) == 0:
         messagebox.showinfo(title="No an option", message="please make sure you haven't left any fields empty.")
+
     else:
-        with open("data.json", "w") as data_file:
-            json.dump(new_dict, data_file)
+        try:
+            with open("data.json", "r") as data_file:
+                # READ THE DATA
+                data = json.load(data_file)
+
+        except FileNotFoundError:
+            with open("data.json", "w") as data_file:
+                json.dump(new_dict, data_file, indent=4)
+        else:
+            # update the data
+            data.update(new_dict)
+            with open("data.json", "w") as data_file:
+                # updating the new data
+                json.dump(data, data_file, indent=4)
+        finally:
             input_website.delete(0, END)
             input_password.delete(0, END)
             input_password.delete(0, END)
+
+
+# ---------------------------- FIND PASSWORD ------------------------------- #
+
+def find_password():
+    web_name = input_website.get()
+
+    try:
+        with open("data.json", "r") as data_file:
+            # READ THE DATA
+            data = json.load(data_file)
+
+    except FileNotFoundError:
+        open("data.json", "w")
+        messagebox.showinfo(title="error", message="No data found in the file")
+    else:
+        if web_name in data:
+            email = data[web_name]["email"]
+            my_password = data[web_name]["password"]
+            messagebox.showinfo(title=web_name,
+                                message=f"your password for this website is: {my_password}\n, and your user name is:"
+                                        f" {email}")
+        else:
+            messagebox.showinfo(title="Error", message=f"no details for: {web_name} exists.")
+
+    finally:
+        input_website.delete(0, END)
+        input_password.delete(0, END)
+        input_password.delete(0, END)
 
 
 # ---------------------------- UI SETUP ------------------------------- #
@@ -66,6 +110,9 @@ input_website = Entry(width=37)
 input_website.grid(row=1, column=1, columnspan=2)
 website_text.focus()
 
+search_button = Button(text="Search", width=12, command=find_password)
+search_button.grid(row=1, column=2)
+
 user_name_text = Label(text="Email/Username")
 user_name_text.grid(row=2, column=0)
 input_user_name = Entry(width=37)
@@ -74,8 +121,9 @@ input_user_name.grid(row=2, column=1, columnspan=2)
 
 password_text = Label(text="Password")
 password_text.grid(row=3, column=0)
-input_password = Entry(width=18)
-input_password.grid(row=3, column=1)
+
+input_password = Entry(width=37)
+input_password.grid(row=3, column=1, columnspan=2)
 
 second_password_text = Button(text="Generate Password", command=generate_password)
 second_password_text.grid(row=3, column=2)
